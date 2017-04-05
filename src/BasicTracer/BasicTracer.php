@@ -45,10 +45,10 @@ class BasicTracer implements TracerInterface
     public function startSpan(
         string $operationName,
         array $references = [],
-        int $startTimestamp = null,
+        float $startTimestamp = null,
         array $tags = []
     ) : SpanInterface {
-        $startTimestamp = (int) ($startTimestamp ?: microtime(false));
+        $startTimestamp = $startTimestamp ?: microtime(true);
         $spanId = mt_rand();
 
         // Resolve base context

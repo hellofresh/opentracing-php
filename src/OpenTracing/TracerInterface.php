@@ -18,7 +18,7 @@ interface TracerInterface
      *
      * @param string $operationName
      * @param SpanReference[] $references
-     * @param int|null $startTimestamp a explicit start time in microseconds or current time when omitted
+     * @param float|null $startTimestamp a explicit start time in microseconds or current time when omitted
      * @param array $tags
      *
      * @return SpanInterface
@@ -26,7 +26,7 @@ interface TracerInterface
     public function startSpan(
         string $operationName,
         array $references = [],
-        int $startTimestamp = null,
+        float $startTimestamp = null,
         array $tags = []
     ) : SpanInterface;
 

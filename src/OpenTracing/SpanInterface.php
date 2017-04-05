@@ -54,12 +54,12 @@ interface SpanInterface
      * @link https://github.com/opentracing/specification/blob/master/semantic_conventions.md#log-fields-table
      *
      * @param string|array $event the event value; often a stable identifier for a moment in the Span lifecycle
-     * @param int|null $timestampMicroseconds The explicit timestamp for the log record.
+     * @param float|null $timestampMicroseconds The explicit timestamp for the log record.
      *                                        Must be greater than or equal to the Span's start timestamp.
      *                                        If Null the current time is used.
      * @return self the Span, for chaining
      */
-    public function log($event, int $timestampMicroseconds = null) : SpanInterface;
+    public function log($event, float $timestampMicroseconds = null) : SpanInterface;
 
     /**
      * Sets a baggage item in the Span (and its SpanContext) as a key/value pair.

@@ -12,11 +12,11 @@ class Span implements SpanInterface
      */
     private $recorder;
     /**
-     * @var int
+     * @var float
      */
     private $startTimestamp;
     /**
-     * @var int
+     * @var float
      */
     private $endTimestamp;
     /**
@@ -46,14 +46,14 @@ class Span implements SpanInterface
 
     /**
      * @param RecorderInterface $recorder
-     * @param int $startTimestamp
+     * @param float $startTimestamp
      * @param string $operationName
      * @param int $parentSpanId
      * @param SpanContext $initialContext
      */
     public function __construct(
         RecorderInterface $recorder,
-        int $startTimestamp,
+        float $startTimestamp,
         string $operationName,
         SpanContext $initialContext,
         int $parentSpanId = null
@@ -80,9 +80,9 @@ class Span implements SpanInterface
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getStartTimestamp() : int
+    public function getStartTimestamp() : float
     {
         return $this->startTimestamp;
     }
@@ -90,7 +90,7 @@ class Span implements SpanInterface
     /**
      * @return int
      */
-    public function getEndTimestamp() : int
+    public function getEndTimestamp() : float
     {
         return $this->endTimestamp;
     }
@@ -116,7 +116,7 @@ class Span implements SpanInterface
      */
     public function finish()
     {
-        $this->endTimestamp = (int) ($this->endTimestamp ?: microtime(false));
+        $this->endTimestamp = $this->endTimestamp ?: microtime(true);
 
         $this->recorder->record($this);
         $this->recorder = null;
@@ -149,11 +149,11 @@ class Span implements SpanInterface
     /**
      * @inheritdoc
      */
-    public function log($event, int $timestampMicroseconds = null) : SpanInterface
+    public function log($event, float $timestampMicroseconds = null) : SpanInterface
     {
         $this->assertUnfinished();
 
-        $this->logs[] = [$event, $timestampMicroseconds ?: microtime(false)];
+        $this->logs[] = [$event, $timestampMicroseconds ?: microtime(true)];
 
         return $this;
     }
