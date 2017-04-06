@@ -27,10 +27,6 @@ class Recorder implements RecorderInterface
      * @var string
      */
     private $projectUrl;
-    /**
-     * @var array
-     */
-    private $traces = [];
 
     /**
      * @param AuthProviderInterface $authHandler
@@ -44,7 +40,6 @@ class Recorder implements RecorderInterface
             'https://cloudtrace.googleapis.com/v1/projects/%s/traces',
             urlencode($this->projectId)
         );
-        register_shutdown_function([$this, 'upload']);
     }
 
     /**
@@ -83,27 +78,14 @@ class Recorder implements RecorderInterface
             $traceSpan['labels']['parent'] = (string) $span->getParentSpanId();
         }
 
-        $this->traces[$context->getTraceId()][] = $traceSpan;
-    }
-
-    public function upload()
-    {
-        if (empty($this->traces)) {
-            return;
-        }
-
-        $traces = [];
-        foreach ($this->traces as $traceId => $spans) {
-            // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects.traces#Trace
-            $traces[] = [
-                'projectId' => $this->projectId,
-                'traceId' => $traceId,
-                'spans' => $spans,
-            ];
-        }
-
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
-        $data = json_encode([ 'traces' => $traces ]);
+        $data = json_encode([ 'traces' => [
+            [
+                'projectId' => $this->projectId,
+                'traceId' => $context->getTraceId(),
+                'spans' => $traceSpan,
+            ],
+        ] ]);
 
         // Send the request
         $process = $this->createRequestProcess($data);
