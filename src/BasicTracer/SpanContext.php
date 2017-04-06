@@ -39,12 +39,12 @@ class SpanContext implements SpanContextInterface
     private $baggage;
 
     /**
-     * @param int $traceId
+     * @param string $traceId A hex representation of a UUID
      * @param int $spanId
      * @param bool $sampled
      * @param array $baggage
      */
-    public function __construct(int $traceId, int $spanId, bool $sampled, array $baggage = [])
+    public function __construct(string $traceId, int $spanId, bool $sampled, array $baggage = [])
     {
         $this->traceId = $traceId;
         $this->spanId = $spanId;
@@ -53,9 +53,9 @@ class SpanContext implements SpanContextInterface
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getTraceId() : int
+    public function getTraceId() : string
     {
         return $this->traceId;
     }

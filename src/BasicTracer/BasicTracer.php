@@ -8,6 +8,7 @@ use HelloFresh\OpenTracing\SpanContextInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 use HelloFresh\OpenTracing\SpanReference;
 use HelloFresh\OpenTracing\TracerInterface;
+use Ramsey\Uuid\Uuid;
 
 class BasicTracer implements TracerInterface
 {
@@ -34,8 +35,12 @@ class BasicTracer implements TracerInterface
     public function __construct(RecorderInterface $recorder, \Closure $shouldSample = null)
     {
         $this->recorder = $recorder;
-        $this->shouldSample = $shouldSample ?: function (int $traceId) {
-            return $traceId % 64 == 0;
+        $this->shouldSample = $shouldSample ?: function (string $traceId) {
+            /** @var \Moontoast\Math\BigNumber $int */
+            // https://github.com/opentracing/basictracer-go/blob/1b32af207119a14b1b231d451df3ed04a72efebf/tracer.go#L100
+            $int = Uuid::fromString($traceId)->getInteger();
+
+            return $int->mod(64)->isEqualTo(0);
         };
     }
 
@@ -54,7 +59,7 @@ class BasicTracer implements TracerInterface
         // Resolve base context
         $context = $parentSpanId = null;
         foreach ($references as $reference) {
-            if (in_array($reference->getType(), [SpanReference::CHILD_OF. SpanReference::FOLLOWS_FROM], true)) {
+            if (in_array($reference->getType(), [SpanReference::CHILD_OF, SpanReference::FOLLOWS_FROM], true)) {
                 /** @var SpanContext $parentContext */
                 $parentContext = $reference->getContext();
 
@@ -69,7 +74,7 @@ class BasicTracer implements TracerInterface
             }
         }
         if ($context === null) {
-            $traceId = mt_rand();
+            $traceId = Uuid::uuid4()->getHex();
             $context = new SpanContext(
                 $traceId,
                 $spanId,
@@ -82,7 +87,8 @@ class BasicTracer implements TracerInterface
             $this->recorder,
             $startTimestamp,
             $operationName,
-            $context
+            $context,
+            $parentSpanId
         );
         foreach ($tags as $key => $val) {
             $span->setTag($key, $val);
