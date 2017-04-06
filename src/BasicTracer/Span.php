@@ -116,6 +116,10 @@ class Span implements SpanInterface
      */
     public function finish()
     {
+        if ($this->recorder === null) {
+            return;
+        }
+
         $this->endTimestamp = $this->endTimestamp ?: microtime(true);
 
         $this->recorder->record($this);
