@@ -95,7 +95,7 @@ class Recorder implements RecorderInterface
         $traces = [];
         foreach ($this->traces as $traceId => $spans) {
             // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects.traces#Trace
-            $traces = [
+            $traces[] = [
                 'projectId' => $this->projectId,
                 'traceId' => $traceId,
                 'spans' => $spans,
@@ -107,8 +107,6 @@ class Recorder implements RecorderInterface
 
         // Send the request
         $process = $this->createRequestProcess($data);
-
-        $process = new Process($process->getCommandLine() . '  > /dev/null 2>&1 &');
         $process->run();
     }
 
