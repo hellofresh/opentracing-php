@@ -28,12 +28,17 @@ $tracer = new \HelloFresh\BasicTracer\BasicTracer($recorder, function () {
 echo "Start 0\n";
 $span = $tracer->startSpan('opentracing-php');
 
-$span1 = $tracer->startSpan('opentracing-php/span1', [
+usleep(5000);
+
+$span1 = $tracer->startSpan('opentracing-php-internal', [
     new \HelloFresh\OpenTracing\SpanReference(\HelloFresh\OpenTracing\SpanReference::CHILD_OF, $span->context()),
 ]);
 echo "1\n";
+usleep(5000);
 
 $span1->finish();
+
+usleep(5000);
 
 echo "Finish 0\n";
 $span->finish();
