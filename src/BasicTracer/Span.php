@@ -80,6 +80,14 @@ class Span implements SpanInterface
     }
 
     /**
+     * @return array
+     */
+    public function getTags() : array
+    {
+        return $this->tags;
+    }
+
+    /**
      * @return float
      */
     public function getStartTimestamp() : float
