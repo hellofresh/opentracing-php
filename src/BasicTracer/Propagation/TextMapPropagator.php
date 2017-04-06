@@ -63,5 +63,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
         foreach ($spanContext->getBaggageItems() as $key => $value) {
             $carrier[self::PREFIX_BAGGAGE . $key] = $value;
         }
+
+        return $carrier;
     }
 }
