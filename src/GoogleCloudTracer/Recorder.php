@@ -104,16 +104,18 @@ class Recorder implements RecorderInterface
             '--request',
             'PATCH',
             '--header', 'Content-Type: application/json',
-            '--header', sprintf('Authorization: Bearer %s', $this->authHandler->getAccessToken()),
-            '--data-raw',
-            $json,
+            '--header', ProcessUtils::escapeArgument(
+                sprintf('Authorization: Bearer %s', $this->authHandler->getAccessToken())
+            ),
             '--retry',
             2,
             '--silent',
-            $this->projectUrl,
+            '--data-raw',
+            ProcessUtils::escapeArgument($json),
+            ProcessUtils::escapeArgument($this->projectUrl),
         ];
 
-        $script = implode(' ', array_map([ProcessUtils::class, 'escapeArgument'], $arguments));
+        $script = implode(' ', $arguments);
 
         // Ensure we run the command in the background so it keeps alive after the php process has gone.
         if (in_array(PHP_OS, ['WINNT', 'WIN32', 'Windows'], true)) {
