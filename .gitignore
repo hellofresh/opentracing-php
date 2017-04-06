@@ -1,3 +1,4 @@
 /vendor/
+/.example-cache
 .php_cs.cache
 composer.lock

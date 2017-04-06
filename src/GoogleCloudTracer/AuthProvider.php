@@ -9,7 +9,7 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessBuilder;
 
-class AuthHandler
+class AuthProvider implements AuthProviderInterface
 {
     /**
      * @var string

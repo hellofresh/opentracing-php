@@ -2,19 +2,21 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-// Configure Google cloud
-$gCloudConfig = new \HelloFresh\GoogleCloudTracer\Config(
+// Create cache for auth token
+$cache = new \Doctrine\Common\Cache\PhpFileCache(__DIR__ . '/.example-cache');
+
+// Configure Google cloud authenticator
+$gCloudAuth = new \HelloFresh\GoogleCloudTracer\AuthProvider(
     getenv('gc_email'),
+    getenv('gc_private_id'),
     str_replace('\n', "\n", getenv('gc_private_key')),
-    getenv('gc_project_id')
+    $cache
 );
 
-$client = \Http\Discovery\HttpAsyncClientDiscovery::find();
+// Create Google cloud recorder
 $recorder = new \HelloFresh\GoogleCloudTracer\Recorder(
-    $gCloudConfig,
-    $client,
-    \Http\Discovery\MessageFactoryDiscovery::find(),
-    \Http\Discovery\UriFactoryDiscovery::find()
+    $gCloudAuth,
+    getenv('gc_project_id')
 );
 
 // Create the tracer
@@ -23,20 +25,17 @@ $tracer = new \HelloFresh\BasicTracer\BasicTracer($recorder, function () {
 });
 
 // Do the magic
+echo "Start 0\n";
 $span = $tracer->startSpan('opentracing-php');
 
 $span1 = $tracer->startSpan('opentracing-php/span1', [
     new \HelloFresh\OpenTracing\SpanReference(\HelloFresh\OpenTracing\SpanReference::CHILD_OF, $span->context()),
 ]);
-
-echo "Action one\n";
+echo "1\n";
 
 $span1->finish();
 
-echo  "Let's Sleep\n";
-sleep(3);
-
+echo "Finish 0\n";
 $span->finish();
 
-echo  "Done so let's wait\n";
-sleep(3);
+echo  "Done\n";
