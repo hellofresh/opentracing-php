@@ -1,8 +1,7 @@
 <?php declare(strict_types=1);
 
-namespace HelloFresh\OpenTracing\BasicTracer;
+namespace HelloFresh\BasicTracer;
 
-use HelloFresh\BasicTracer\RecorderInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 
 class NoopRecorder implements RecorderInterface
