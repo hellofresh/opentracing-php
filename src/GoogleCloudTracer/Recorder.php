@@ -7,7 +7,7 @@ use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\OpenTracing\SpanInterface;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\ProcessBuilder;
+use Symfony\Component\Process\ProcessUtils;
 
 /**
  * @link https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
@@ -27,6 +27,10 @@ class Recorder implements RecorderInterface
      * @var string
      */
     private $projectUrl;
+    /**
+     * @var array
+     */
+    private $traces = [];
 
     /**
      * @param AuthProviderInterface $authHandler
@@ -40,6 +44,7 @@ class Recorder implements RecorderInterface
             'https://cloudtrace.googleapis.com/v1/projects/%s/traces',
             urlencode($this->projectId)
         );
+        register_shutdown_function([$this, 'upload']);
     }
 
     /**
@@ -67,28 +72,44 @@ class Recorder implements RecorderInterface
             'name' => $span->getOperationName(),
             'startTime' => $this->formatTimestamp($span->getStartTimestamp()),
             'endTime' => $this->formatTimestamp($span->getEndTimestamp()),
-            'labels' => ['test' => 'true'],
+            'labels' => [
+                'test' => 'true',
+                'spanId' => (string) $context->getSpanId(),
+                'traceId' => $context->getTraceId(),
+            ],
         ];
         if ($span->getParentSpanId() !== null) {
             $traceSpan['parentSpanId'] = (string) $span->getParentSpanId();
+            $traceSpan['labels']['parent'] = (string) $span->getParentSpanId();
+        }
+
+        $this->traces[$context->getTraceId()][] = $traceSpan;
+    }
+
+    public function upload()
+    {
+        if (empty($this->traces)) {
+            return;
+        }
+
+        $traces = [];
+        foreach ($this->traces as $traceId => $spans) {
+            // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects.traces#Trace
+            $traces = [
+                'projectId' => $this->projectId,
+                'traceId' => $traceId,
+                'spans' => $spans,
+            ];
         }
 
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
-        $data = json_encode([
-            'traces' => [
-                [
-                    'projectId' => $this->projectId,
-                    'traceId' => (string) $context->getTraceId(),
-                    'spans' => [
-                        $traceSpan,
-                    ],
-                ],
-            ],
-        ]);
+        $data = json_encode([ 'traces' => $traces ]);
 
         // Send the request
         $process = $this->createRequestProcess($data);
-        $process->start();
+
+        $process = new Process($process->getCommandLine() . '  > /dev/null 2>&1 &');
+        $process->run();
     }
 
     /**
@@ -97,7 +118,7 @@ class Recorder implements RecorderInterface
      */
     private function createRequestProcess(string $json) : Process
     {
-        return ProcessBuilder::create([
+        $arguments = [
             'curl',
             '--request',
             'PATCH',
@@ -109,11 +130,21 @@ class Recorder implements RecorderInterface
             2,
             '--silent',
             $this->projectUrl,
-        ])
-            ->inheritEnvironmentVariables(false)
-            ->enableOutput()
-            ->setTimeout(2)
-            ->getProcess();
+        ];
+
+        $script = implode(' ', array_map([ProcessUtils::class, 'escapeArgument'], $arguments));
+
+        // Ensure we run the command in the background so it keeps alive after the php process has gone.
+        if (in_array(PHP_OS, ['WINNT', 'WIN32', 'Windows'], true)) {
+            $script  = 'start "" '. $script;
+        } else {
+            $script  = $script . '  > /dev/null 2>&1 &';
+        }
+
+        $process = new Process($script, null, [], null, 2);
+        $process->disableOutput();
+
+        return $process;
     }
 
     /**
