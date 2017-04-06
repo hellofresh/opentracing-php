@@ -28,6 +28,10 @@ class Recorder implements RecorderInterface
      * @var string
      */
     private $projectUrl;
+    /**
+     * @var string
+     */
+    private $logFile;
 
     /**
      * @param AuthProviderInterface $authHandler
@@ -59,8 +63,6 @@ class Recorder implements RecorderInterface
             return;
         }
 
-        // TODO https://github.com/GoogleCloudPlatform/google-cloud-go/blob/c1a56f8287e26a1e1c9f9b9a979cdf4e5a29c937/trace/trace.go#L535
-
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects.traces#TraceSpan
         $traceSpan = [
             'spanId' => (string) $context->getSpanId(),
@@ -68,10 +70,13 @@ class Recorder implements RecorderInterface
             'name' => $span->getOperationName(),
             'startTime' => $this->formatTimestamp($span->getStartTimestamp()),
             'endTime' => $this->formatTimestamp($span->getEndTimestamp()),
-            'labels' => $this->extractLabels($span),
         ];
         if ($span->getParentSpanId() !== null) {
             $traceSpan['parentSpanId'] = (string) $span->getParentSpanId();
+        }
+        $labels = $this->extractLabels($span);
+        if (!empty($labels)) {
+            $traceSpan['labels'] = $labels;
         }
 
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
@@ -114,7 +119,12 @@ class Recorder implements RecorderInterface
         if (in_array(PHP_OS, ['WINNT', 'WIN32', 'Windows'], true)) {
             $script  = 'start "" '. $script;
         } else {
-            $script  = $script . '  > /dev/null 2>&1 &';
+            if ($this->logFile !== null) {
+                $logTo = ProcessUtils::escapeArgument($this->logFile);
+                $script  = $script . '  >> '.  $logTo .' 2>&1 &';
+            } else {
+                $script  = $script . '  > /dev/null 2>&1 &';
+            }
         }
 
         $process = new Process($script, null, [], null, 2);
@@ -159,7 +169,7 @@ class Recorder implements RecorderInterface
      * @param Span $span
      * @return array
      */
-    private function extractLabels(Span $span)
+    private function extractLabels(Span $span) : array
     {
         $labels = [];
 

@@ -27,6 +27,7 @@ $tracer = new \HelloFresh\BasicTracer\BasicTracer($recorder, function () {
 // Do the magic
 echo "Start 0\n";
 $span = $tracer->startSpan('opentracing-php');
+$span->setTag(\HelloFresh\BasicTracer\Tags::PEER_HOSTNAME, php_uname('n'));
 
 usleep(5000);
 
