@@ -5,6 +5,7 @@ namespace HelloFresh\GoogleCloudTracer;
 use HelloFresh\BasicTracer\RecorderInterface;
 use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
+use HelloFresh\BasicTracer\Tags;
 use HelloFresh\OpenTracing\SpanInterface;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessUtils;
@@ -63,19 +64,14 @@ class Recorder implements RecorderInterface
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects.traces#TraceSpan
         $traceSpan = [
             'spanId' => (string) $context->getSpanId(),
-//            'kind' => 'SPAN_KIND_UNSPECIFIED',
+            'kind' => $this->getSpanKind($span),
             'name' => $span->getOperationName(),
             'startTime' => $this->formatTimestamp($span->getStartTimestamp()),
             'endTime' => $this->formatTimestamp($span->getEndTimestamp()),
-            'labels' => [
-                'test' => 'true',
-                'spanId' => (string) $context->getSpanId(),
-                'traceId' => $context->getTraceId(),
-            ],
+            'labels' => $this->extractLabels($span),
         ];
         if ($span->getParentSpanId() !== null) {
             $traceSpan['parentSpanId'] = (string) $span->getParentSpanId();
-            $traceSpan['labels']['parent'] = (string) $span->getParentSpanId();
         }
 
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
@@ -134,5 +130,56 @@ class Recorder implements RecorderInterface
     private function formatTimestamp(float $timestamp) : string
     {
         return \DateTime::createFromFormat('U.u', (string) $timestamp)->format('Y-m-d\TH:i:s.uP');
+    }
+
+    /**
+     * @see https://github.com/opentracing/specification/blob/master/semantic_conventions.md#rpcs
+     *
+     * @param Span $span
+     * @return string
+     */
+    private function getSpanKind(Span $span) : string
+    {
+        $tags = $span->getTags();
+        $kind = $tags[Tags::SPAN_KIND] ?? null;
+
+        switch ($kind) {
+            case 'server':
+                return 'RPC_SERVER';
+            case 'client':
+                return 'RPC_CLIENT';
+            default:
+                return 'SPAN_KIND_UNSPECIFIED';
+        }
+    }
+
+    /**
+     * Transform the tags of the span to labels
+     *
+     * @param Span $span
+     * @return array
+     */
+    private function extractLabels(Span $span)
+    {
+        $labels = [];
+
+        // Rewrite opentracinglabels into those gcloud-native labels
+        // https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/trace/trace.go#L178
+        $labelMap = [
+            Tags::PEER_HOSTNAME => 'trace.cloud.google.com/http/host',
+            Tags::HTTP_METHOD => 'trace.cloud.google.com/http/method',
+            Tags::HTTP_STATUS_CODE => 'trace.cloud.google.com/http/status_code',
+            Tags::HTTP_URL => 'trace.cloud.google.com/http/url',
+        ];
+
+        foreach ($span->getTags() as $key => $value) {
+            if (isset($labelMap[$key])) {
+                $key = $labelMap[$key];
+            }
+
+            $labels[$key] = $value;
+        }
+
+        return $labels;
     }
 }
