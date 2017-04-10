@@ -2,6 +2,8 @@
 
 namespace HelloFresh\BasicTracer;
 
+use HelloFresh\BasicTracer\Exception\ExtractionException;
+use HelloFresh\BasicTracer\Exception\InjectionException;
 use HelloFresh\BasicTracer\Propagation\ExtractorInterface;
 use HelloFresh\BasicTracer\Propagation\InjectorInterface;
 use HelloFresh\OpenTracing\SpanContextInterface;
@@ -103,7 +105,7 @@ class BasicTracer implements TracerInterface
     public function inject(SpanContextInterface $spanContext, string $format, $carrier)
     {
         if (!isset($this->injectors[$format])) {
-            throw new \RuntimeException();
+            throw new InjectionException(sprintf('No injector is available for format \'%s\'', $format));
         }
 
         return $this->injectors[$format]->inject($spanContext, $carrier);
@@ -115,7 +117,7 @@ class BasicTracer implements TracerInterface
     public function extract(string $format, $carrier) : SpanContextInterface
     {
         if (!isset($this->extractors[$format])) {
-            throw new \RuntimeException();
+            throw new ExtractionException(sprintf('No extractor is available for format \'%s\'', $format));
         }
 
         return $this->extractors[$format]->extract($carrier);

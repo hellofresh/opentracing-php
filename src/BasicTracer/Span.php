@@ -196,7 +196,9 @@ class Span implements SpanInterface
     private function assertUnfinished()
     {
         if ($this->recorder === null) {
-            throw new \LogicException('You are the destroyer of worlds! Maybe it\'s time to go to bed?');
+            throw new SpanStateException(
+                'The Span is finished! You have become the destroyer of worlds! Maybe it\'s time to go to bed?'
+            );
         }
     }
 }

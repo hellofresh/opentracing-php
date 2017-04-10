@@ -2,6 +2,7 @@
 
 namespace HelloFresh\BasicTracer\Propagation;
 
+use HelloFresh\BasicTracer\Exception\ExtractionException;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\OpenTracing\SpanContextInterface;
 
@@ -36,7 +37,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
                     $sampled = (bool) $value;
 
                     break;
-                case substr($keyLower, 0, strlen(self::PREFIX_BAGGAGE)) === self::PREFIX_BAGGAGE:
+                case strpos($keyLower, self::PREFIX_BAGGAGE) === 0:
                     $key = substr($key, strlen(self::PREFIX_BAGGAGE));
                     $baggage[$key] = $value;
                     break;
@@ -44,7 +45,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
         }
 
         if ($traceId === null || $spanId === null || $sampled === null) {
-            throw new \RuntimeException();
+            throw new ExtractionException('Unable to extract span context from carrier');
         }
 
         return new SpanContext($traceId, $spanId, $sampled, $baggage);
@@ -53,7 +54,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
     public function inject(SpanContextInterface $spanContext, $carrier)
     {
         if (!$spanContext instanceof SpanContext) {
-            throw new \RuntimeException();
+            throw new InjectionException(sprintf('Unsupported SpanContext of type \'%s\'', get_class($spanContext)));
         }
 
         $carrier[self::FIELD_TRACE_ID] = $spanContext->getTraceId();
