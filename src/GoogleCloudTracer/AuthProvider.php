@@ -105,7 +105,7 @@ class AuthProvider implements AuthProviderInterface
             'curl',
             '--request',
             'POST',
-            '--data-raw',
+            '--data',
             $postData,
             '--retry',
             2,

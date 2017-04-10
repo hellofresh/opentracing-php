@@ -110,7 +110,7 @@ class Recorder implements RecorderInterface
             '--retry',
             2,
             '--silent',
-            '--data-raw',
+            '--data',
             ProcessUtils::escapeArgument($json),
             ProcessUtils::escapeArgument($this->projectUrl),
         ];
