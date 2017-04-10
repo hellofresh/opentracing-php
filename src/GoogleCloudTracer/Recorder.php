@@ -189,7 +189,7 @@ class Recorder implements RecorderInterface
                 $key = $labelMap[$key];
             }
 
-            $labels[$key] = $value;
+            $labels[$key] = (string) $value;
         }
 
         return $labels;
