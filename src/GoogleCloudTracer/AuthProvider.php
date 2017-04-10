@@ -4,6 +4,7 @@ namespace HelloFresh\GoogleCloudTracer;
 
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\Cache;
+use HelloFresh\GoogleCloudTracer\Exception\AccessTokenException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Symfony\Component\Process\Process;
@@ -125,13 +126,13 @@ class AuthProvider implements AuthProviderInterface
     {
         $data = json_decode($output, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \InvalidArgumentException(
-                sprintf('Access Token response json_decode error %s', json_last_error_msg())
+            throw new AccessTokenException(
+                sprintf('Response json_decode error %s', json_last_error_msg())
             );
         }
 
         if (empty($data['access_token'])) {
-            throw new \InvalidArgumentException('Access Token response provides no access token');
+            throw new AccessTokenException('Response contains no \'access_token\'');
         }
 
         return $data['access_token'];
