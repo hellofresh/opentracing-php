@@ -79,11 +79,21 @@ class Recorder implements RecorderInterface
             $traceSpan['labels'] = $labels;
         }
 
+        // Resolve the traceId for google cloud
+        // Related to https://github.com/hellofresh/gcloud-opentracing/blob/master/recorder.go#L98
+        $traceId = $context->getTraceId();
+        if (strlen($traceId) === 36) {
+            $traceId = str_replace('-', '', $traceId);
+        }
+        if (strlen($traceId) === 16) {
+            $traceId = $traceId . $traceId;
+        }
+
         // https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
         $data = json_encode([ 'traces' => [
             [
                 'projectId' => $this->projectId,
-                'traceId' => $context->getTraceId(),
+                'traceId' => $traceId,
                 'spans' => $traceSpan,
             ],
         ] ]);
