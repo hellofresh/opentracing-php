@@ -3,6 +3,7 @@
 namespace HelloFresh\BasicTracer\Propagation;
 
 use HelloFresh\BasicTracer\Exception\ExtractionException;
+use HelloFresh\BasicTracer\Exception\InjectionException;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\OpenTracing\SpanContextInterface;
 

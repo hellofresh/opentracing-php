@@ -2,6 +2,7 @@
 
 namespace HelloFresh\BasicTracer;
 
+use HelloFresh\BasicTracer\Exception\SpanStateException;
 use HelloFresh\OpenTracing\SpanContextInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 
