@@ -176,7 +176,7 @@ class Recorder implements RecorderInterface
     }
 
     /**
-     * Transform the tags of the span to labels
+     * Extract information from the span into gcloud trace labels
      *
      * @param Span $span
      * @return array
@@ -185,6 +185,20 @@ class Recorder implements RecorderInterface
     {
         $labels = [];
 
+        $this->appendTags($labels, $span);
+        $this->appendLogs($labels, $span);
+
+        return $labels;
+    }
+
+    /**
+     * Append opentracing tags into gcloud trace labels
+     *
+     * @param Span $span
+     * @param array $labels
+     */
+    private function appendTags(array &$labels, Span $span)
+    {
         // Rewrite opentracinglabels into those gcloud-native labels
         // https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/trace/trace.go#L178
         $labelMap = [
@@ -201,7 +215,26 @@ class Recorder implements RecorderInterface
 
             $labels[$key] = (string) $value;
         }
+    }
 
-        return $labels;
+    /**
+     * Append opentracing logs into gcloud trace labels
+     *
+     * @param array $labels
+     * @param Span $span
+     */
+    private function appendLogs(array &$labels, Span $span)
+    {
+        foreach ($span->getLogs() as $key => $values) {
+            foreach ($values as $i => $info) {
+                if (empty($info[1])) {
+                    $value = $info[0];
+                } else {
+                    $value = sprintf('%s %d', $info[0], $info[1]);
+                }
+
+                $labels[sprintf('log_%s_%d', $key, $i)] = (string) $value;
+            }
+        }
     }
 }
