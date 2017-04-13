@@ -97,7 +97,7 @@ class Span implements SpanInterface
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getEndTimestamp() : float
     {
