@@ -23,6 +23,13 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
 
     public function extract($carrier) : SpanContextInterface
     {
+        if (!is_array($carrier) && !$carrier instanceof \Traversable) {
+            throw new ExtractionException(sprintf(
+                'Unsupported carrier of type "%s" expected an array or object implementing Traversable',
+                is_object($carrier) ? get_class($carrier) : gettype($carrier)
+            ));
+        }
+
         $traceId = $spanId = $sampled = null;
         $baggage = [];
         foreach ($carrier as $key => $value) {
@@ -35,8 +42,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
                     $spanId = (int) $value;
                     break;
                 case self::FIELD_SAMPLED:
-                    $sampled = (bool) $value;
-
+                    $sampled = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                     break;
                 case strpos($keyLower, self::PREFIX_BAGGAGE) === 0:
                     $key = substr($key, strlen(self::PREFIX_BAGGAGE));
@@ -56,6 +62,13 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
     {
         if (!$spanContext instanceof SpanContext) {
             throw new InjectionException(sprintf('Unsupported SpanContext of type \'%s\'', get_class($spanContext)));
+        }
+
+        if (!is_array($carrier) && !$carrier instanceof \ArrayAccess) {
+            throw new ExtractionException(sprintf(
+                'Unsupported carrier of type "%s" expected an array or object implementing ArrayAccess',
+                is_object($carrier) ? get_class($carrier) : gettype($carrier)
+            ));
         }
 
         $carrier[self::FIELD_TRACE_ID] = $spanContext->getTraceId();
