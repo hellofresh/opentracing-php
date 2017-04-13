@@ -106,9 +106,9 @@ class Span implements SpanInterface
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getEndTimestamp() : float
+    public function getEndTimestamp()
     {
         return $this->endTimestamp;
     }
@@ -195,7 +195,7 @@ class Span implements SpanInterface
     public function logs(array $fields, float $timestampMicroseconds = null) : SpanInterface
     {
         foreach ($fields as $key => $value) {
-            $this->log($key, $value);
+            $this->log($key, $value, $timestampMicroseconds);
         }
 
         return $this;
