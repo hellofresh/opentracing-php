@@ -29,7 +29,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
             $keyLower = mb_strtolower($key);
             switch ($keyLower) {
                 case self::FIELD_TRACE_ID:
-                    $traceId = $value;
+                    $traceId = (string) $value;
                     break;
                 case self::FIELD_SPAN_ID:
                     $spanId = (int) $value;
