@@ -58,14 +58,26 @@ interface SpanInterface
      * Record an event at a specific timestamp.
      *
      * @link https://github.com/opentracing/specification/blob/master/specification.md#log-structured-data
-
-     * @param string|array $event the event value; often a stable identifier for a moment in the Span lifecycle
-     * @param float|null $timestampMicroseconds The explicit timestamp for the log record.
-     *                                        Must be greater than or equal to the Span's start timestamp.
-     *                                        If Null the current time is used.
-     * @return self the Span, for chaining
+     *
+     * @param string $key
+     * @param $value
+     * @param float|null $timestampMicroseconds The explicit timestamp for the log record or NULL.
+     *                                          Must be greater than or equal to the Span's start timestamp.
+     * @return SpanInterface the Span, for chaining
      */
-    public function log($event, float $timestampMicroseconds = null) : SpanInterface;
+    public function log(string $key, $value, float $timestampMicroseconds = null) : SpanInterface;
+
+    /**
+     * Record an event at a specific timestamp.
+     *
+     * @link https://github.com/opentracing/specification/blob/master/specification.md#log-structured-data
+     *
+     * @param array $fields A map where the keys must be strings and the values may have any type at all.
+     * @param float|null $timestampMicroseconds The explicit timestamp for the log record or NULL.
+     *                                          Must be greater than or equal to the Span's start timestamp.
+     * @return SpanInterface the Span, for chaining
+     */
+    public function logs(array $fields, float $timestampMicroseconds = null) : SpanInterface;
 
     /**
      * Sets a baggage item in the Span (and its SpanContext) as a key/value pair.

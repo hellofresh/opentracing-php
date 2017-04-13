@@ -121,6 +121,15 @@ class Span implements SpanInterface
     }
 
     /**
+     * @return array A map where the keys are strings and the values array with the first element being the value of
+     *               any type and the second being the timestamp or NULL if none was logged.
+     */
+    public function getLogs() : array
+    {
+        return $this->logs;
+    }
+
+    /**
      * @inheritdoc
      */
     public function finish()
@@ -162,11 +171,23 @@ class Span implements SpanInterface
     /**
      * @inheritdoc
      */
-    public function log($event, float $timestampMicroseconds = null) : SpanInterface
+    public function log(string $key, $value, float $timestampMicroseconds = null) : SpanInterface
     {
         $this->assertUnfinished();
 
-        $this->logs[] = [$event, $timestampMicroseconds ?: microtime(true)];
+        $this->logs[$key][] = [$value, $timestampMicroseconds];
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function logs(array $fields, float $timestampMicroseconds = null) : SpanInterface
+    {
+        foreach ($fields as $key => $value) {
+            $this->log($key, $value);
+        }
 
         return $this;
     }
