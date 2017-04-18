@@ -3,8 +3,10 @@
 namespace Tests\HelloFresh\BasicTracer\Propagation;
 
 use HelloFresh\BasicTracer\Exception\ExtractionException;
+use HelloFresh\BasicTracer\Exception\InjectionException;
 use HelloFresh\BasicTracer\Propagation\TextMapPropagator;
 use HelloFresh\BasicTracer\SpanContext;
+use HelloFresh\OpenTracing\SpanContextInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -98,6 +100,97 @@ class TextMapPropagatorTest extends TestCase
     }
 
     public function provideInvalidExtractionCarriers()
+    {
+        return [
+            [ null ],
+            [ new \stdClass() ],
+            [ 1 ],
+            [ 'string' ],
+        ];
+    }
+
+    /**
+     * @test
+     */
+    public function itInjectsContextIntoAnArray()
+    {
+        $context = new SpanContext('test', 324, true, ['a'=>'b', 'c' => 'd']);
+
+        $injector = new TextMapPropagator();
+        $injectedCarrier = $injector->inject($context, []);
+
+        $this->assertEquals(
+            [
+                'ot-tracer-traceid' => 'test',
+                'ot-tracer-spanid' => 324,
+                'ot-tracer-sampled' => true,
+                'ot-baggage-a' => 'b',
+                'ot-baggage-c' => 'd',
+            ],
+            $injectedCarrier
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function itInjectsContextIntoAnArrayObject()
+    {
+        $context = new SpanContext('test', 324, true, ['a'=>'b', 'c' => 'd']);
+        $carrier = new \ArrayObject();
+
+        $injector = new TextMapPropagator();
+        $injectedCarrier = $injector->inject($context, $carrier);
+
+        $this->assertSame(
+            $carrier,
+            $injectedCarrier,
+            'Expected returned carrier to be the same instance as the inject one'
+        );
+        $this->assertEquals(
+            [
+                'ot-tracer-traceid' => 'test',
+                'ot-tracer-spanid' => 324,
+                'ot-tracer-sampled' => true,
+                'ot-baggage-a' => 'b',
+                'ot-baggage-c' => 'd',
+            ],
+            $carrier->getArrayCopy()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function failInjectionWhenTheContextIsNotSupported()
+    {
+        $context = $this->prophesize(SpanContextInterface::class)->reveal();
+
+        $injector = new TextMapPropagator();
+
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Unsupported SpanContext');
+        $injector->inject($context, new \ArrayObject());
+    }
+
+    /**
+     * @test
+     * @dataProvider provideInvalidInjectionCarriers
+     *
+     * @param $carrier
+     */
+    public function failInjectionWhenTheCarrierIsNotSupported($carrier)
+    {
+        $context = $this->prophesize(SpanContext::class)->reveal();
+
+        $injector = new TextMapPropagator();
+
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Unsupported carrier');
+        $injector->inject($context, $carrier);
+    }
+
+    public function provideInvalidInjectionCarriers()
     {
         return [
             [ null ],

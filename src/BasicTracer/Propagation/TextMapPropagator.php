@@ -21,6 +21,12 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
     const FIELD_SPAN_ID = self::PREFIX_TRACER_STATE . 'spanid';
     const FIELD_SAMPLED = self::PREFIX_TRACER_STATE . 'sampled';
 
+    /**
+     * {@inheritdoc}
+     *
+     * @param array|\Traversable $carrier
+     * @return SpanContext
+     */
     public function extract($carrier) : SpanContextInterface
     {
         if (!is_array($carrier) && !$carrier instanceof \Traversable) {
@@ -58,6 +64,13 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
         return new SpanContext($traceId, $spanId, $sampled, $baggage);
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @param SpanContext $spanContext
+     * @param array|\ArrayAccess $carrier
+     * @return array|\ArrayAccess
+     */
     public function inject(SpanContextInterface $spanContext, $carrier)
     {
         if (!$spanContext instanceof SpanContext) {
@@ -65,7 +78,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
         }
 
         if (!is_array($carrier) && !$carrier instanceof \ArrayAccess) {
-            throw new ExtractionException(sprintf(
+            throw new InjectionException(sprintf(
                 'Unsupported carrier of type "%s" expected an array or object implementing ArrayAccess',
                 is_object($carrier) ? get_class($carrier) : gettype($carrier)
             ));
