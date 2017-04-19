@@ -27,11 +27,15 @@ class Span implements SpanInterface
     /**
      * @var SpanContext
      */
-    private $initialContext;
+    private $context;
     /**
      * @var array
      */
     private $baggage;
+    /**
+     * @var bool
+     */
+    private $baggageDirty;
     /**
      * @var array
      */
@@ -50,20 +54,21 @@ class Span implements SpanInterface
      * @param float $startTimestamp
      * @param string $operationName
      * @param int $parentSpanId
-     * @param SpanContext $initialContext
+     * @param SpanContext $context
      */
     public function __construct(
         RecorderInterface $recorder,
         float $startTimestamp,
         string $operationName,
-        SpanContext $initialContext,
+        SpanContext $context,
         int $parentSpanId = null
     ) {
         $this->recorder = $recorder;
         $this->startTimestamp = $startTimestamp;
         $this->operationName = $operationName;
-        $this->initialContext = $initialContext;
-        $this->baggage = $initialContext->getBaggageItems();
+        $this->context = $context;
+        $this->baggage = $context->getBaggageItems();
+        $this->baggageDirty = false;
         $this->parentSpanId = $parentSpanId;
     }
 
@@ -72,12 +77,16 @@ class Span implements SpanInterface
      */
     public function context() : SpanContextInterface
     {
-        return new SpanContext(
-            $this->initialContext->getTraceId(),
-            $this->initialContext->getSpanId(),
-            $this->initialContext->isSampled(),
-            $this->baggage
-        );
+        if ($this->baggageDirty) {
+            $this->context = new SpanContext(
+                $this->context->getTraceId(),
+                $this->context->getSpanId(),
+                $this->context->isSampled(),
+                $this->baggage
+            );
+        }
+
+        return $this->context;
     }
 
     /**
@@ -97,9 +106,9 @@ class Span implements SpanInterface
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getEndTimestamp() : float
+    public function getEndTimestamp()
     {
         return $this->endTimestamp;
     }
@@ -186,7 +195,7 @@ class Span implements SpanInterface
     public function logs(array $fields, float $timestampMicroseconds = null) : SpanInterface
     {
         foreach ($fields as $key => $value) {
-            $this->log($key, $value);
+            $this->log($key, $value, $timestampMicroseconds);
         }
 
         return $this;
@@ -200,6 +209,7 @@ class Span implements SpanInterface
         $this->assertUnfinished();
 
         $this->baggage[$key] = $value;
+        $this->baggageDirty = true;
 
         return $this;
     }

@@ -15,6 +15,11 @@ use Ramsey\Uuid\Uuid;
 class BasicTracer implements TracerInterface
 {
     /**
+     * @var NoopRecorder|null
+     */
+    private static $noopRecorder;
+
+    /**
      * @var RecorderInterface
      */
     private $recorder;
@@ -44,6 +49,18 @@ class BasicTracer implements TracerInterface
 
             return $int->mod(64)->isEqualTo(0);
         };
+    }
+
+    /**
+     * @return RecorderInterface
+     */
+    protected static function getNoopRecorder() : RecorderInterface
+    {
+        if (self::$noopRecorder === null) {
+            self::$noopRecorder = new NoopRecorder();
+        }
+
+        return self::$noopRecorder;
     }
 
     /**
@@ -84,9 +101,12 @@ class BasicTracer implements TracerInterface
             );
         }
 
+        // Use the recorder only when the trace is sampled
+        $recorder = $context->isSampled() ? $this->recorder : static::getNoopRecorder();
+
         // Create the Span (not to be confused with SPAM)
         $span = new Span(
-            $this->recorder,
+            $recorder,
             $startTimestamp,
             $operationName,
             $context,

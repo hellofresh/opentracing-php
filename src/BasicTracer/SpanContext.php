@@ -49,7 +49,7 @@ class SpanContext implements SpanContextInterface
         $this->traceId = $traceId;
         $this->spanId = $spanId;
         $this->sampled = $sampled;
-        $this->baggage = $baggage;
+        $this->baggage = array_map('strval', $baggage);
     }
 
     /**
