@@ -74,7 +74,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
     public function inject(SpanContextInterface $spanContext, $carrier)
     {
         if (!$spanContext instanceof SpanContext) {
-            throw new InjectionException(sprintf('Unsupported SpanContext of type \'%s\'', get_class($spanContext)));
+            throw new InjectionException(sprintf('Unsupported SpanContext of type "%s"', get_class($spanContext)));
         }
 
         if (!is_array($carrier) && !$carrier instanceof \ArrayAccess) {
