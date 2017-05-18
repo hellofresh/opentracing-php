@@ -1,22 +1,31 @@
 <?php declare(strict_types=1);
 
+use HelloFresh\GoogleCloudTracer\Client\ForkingCurlClient;
+
 require __DIR__ . '/vendor/autoload.php';
 
 // Create cache for auth token
 $cache = new \Doctrine\Common\Cache\PhpFileCache(__DIR__ . '/.example-cache');
 
 // Configure Google cloud authenticator
-$gCloudAuth = new \HelloFresh\GoogleCloudTracer\AuthProvider(
+$gCloudAuth = new \HelloFresh\GoogleCloudTracer\Auth\AuthProvider(
     getenv('gc_email'),
     getenv('gc_private_id'),
     str_replace('\n', "\n", getenv('gc_private_key')),
     $cache
 );
 
+$projectId = getenv('gc_project_id');
+
+$gClient = new ForkingCurlClient(
+    $gCloudAuth,
+    $projectId
+);
+
 // Create Google cloud recorder
 $recorder = new \HelloFresh\GoogleCloudTracer\Recorder(
-    $gCloudAuth,
-    getenv('gc_project_id')
+    $gClient,
+    $projectId
 );
 
 // Create the tracer
@@ -44,4 +53,4 @@ usleep(5000);
 echo "Finish 0\n";
 $span->finish();
 
-echo  "Done\n";
+echo "Done\n";
