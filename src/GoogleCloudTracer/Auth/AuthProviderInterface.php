@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace HelloFresh\GoogleCloudTracer;
+namespace HelloFresh\GoogleCloudTracer\Auth;
 
 interface AuthProviderInterface
 {

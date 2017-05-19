@@ -42,8 +42,8 @@ class GoogleCloudFormatterTest extends TestCase
                         [
                             'spanId' => '1',
                             'kind' => SpanKind::UNSPECIFIED,
-                            'name' => 'trace-properly-formatted'
-                        ]
+                            'name' => 'trace-properly-formatted',
+                        ],
                     ],
                 ],
             ],
