@@ -9,7 +9,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessUtils;
 
-class ForkingCurlClient implements ClientInterface
+class ForkingCurlClient implements RecorderClientInterface
 {
     /**
      * @var AuthProviderInterface

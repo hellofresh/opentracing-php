@@ -4,7 +4,7 @@ namespace Tests\HelloFresh\GoogleCloudTracer;
 
 use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
-use HelloFresh\GoogleCloudTracer\Client\ClientInterface;
+use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
 use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
 use HelloFresh\GoogleCloudTracer\Recorder;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ class RecorderTest extends TestCase
     private $formatter;
 
     /**
-     * @var ClientInterface|ObjectProphecy
+     * @var RecorderClientInterface|ObjectProphecy
      */
     private $client;
 
@@ -35,7 +35,7 @@ class RecorderTest extends TestCase
 
     public function setUp()
     {
-        $this->client = $this->prophesize(ClientInterface::class);
+        $this->client = $this->prophesize(RecorderClientInterface::class);
         $this->formatter = $this->prophesize(TraceFormatterInterface::class);
         $this->recorder = new Recorder(
             $this->client->reveal(),

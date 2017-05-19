@@ -2,7 +2,7 @@
 
 namespace HelloFresh\GoogleCloudTracer\Client;
 
-interface ClientInterface
+interface RecorderClientInterface
 {
     /**
      * @link https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
