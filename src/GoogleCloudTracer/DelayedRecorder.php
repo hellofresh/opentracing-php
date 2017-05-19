@@ -91,6 +91,10 @@ class DelayedRecorder implements RecorderInterface
      */
     public function commit()
     {
+        if (empty($this->spans)) {
+            return;
+        }
+
         $this->client->patchTraces(
             $this->formatter->formatTrace($this->projectId, $this->traceId, $this->spans)
         );
