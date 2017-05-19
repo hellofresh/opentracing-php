@@ -71,6 +71,7 @@ class Recorder implements RecorderInterface
         if (strlen($traceId) === 36) {
             $traceId = str_replace('-', '', $traceId);
         }
+
         if (strlen($traceId) === 16) {
             $traceId .= $traceId;
         }

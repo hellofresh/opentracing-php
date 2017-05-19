@@ -5,7 +5,7 @@ namespace HelloFresh\GoogleCloudTracer;
 use HelloFresh\BasicTracer\RecorderInterface;
 use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
-use HelloFresh\GoogleCloudTracer\Client\ClientInterface;
+use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
 use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
 use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
 use HelloFresh\OpenTracing\SpanInterface;
@@ -21,7 +21,7 @@ class DelayedRecorder implements RecorderInterface
     private $projectId;
 
     /**
-     * @var ClientInterface
+     * @var RecorderClientInterface
      */
     private $client;
 
@@ -41,12 +41,12 @@ class DelayedRecorder implements RecorderInterface
     private $traceId;
 
     /**
-     * @param ClientInterface $client
+     * @param RecorderClientInterface $client
      * @param string $projectId
      * @param TraceFormatterInterface|null $formatter
      */
     public function __construct(
-        ClientInterface $client,
+        RecorderClientInterface $client,
         string $projectId,
         TraceFormatterInterface $formatter = null
     ) {
