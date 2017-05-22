@@ -7,6 +7,7 @@ use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
 use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
 use HelloFresh\GoogleCloudTracer\Recorder;
+use HelloFresh\OpenTracing\SpanKind;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -61,14 +62,28 @@ class RecorderTest extends TestCase
      */
     public function spanCanBePublishedIfSampled()
     {
+        $data = [
+            'projectId' => 'project-id',
+            'traceId' => 'abc123def456ab12',
+            'spans' => [
+                [
+                    'spanId' => '123def456ab12abc',
+                    'kind' => SpanKind::UNSPECIFIED,
+                    'name' => 'span-operation-name',
+                ],
+            ],
+        ];
+
         $context = new SpanContext('c1072bb1173c53d4c1072bb1173c53d4', 1, true);
         $span = new Span($this->recorder, microtime(true), 'recorder-test-span', $context);
 
         $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span])
             ->shouldBeCalled()
-            ->willReturn(['traces' => ['trace']]);
+            ->willReturn(
+                $data
+            );
 
-        $this->client->patchTraces(['traces' => ['trace']])
+        $this->client->patchTraces([$data])
             ->shouldBeCalled()
             ->willReturn('access-token');
 

@@ -65,7 +65,9 @@ class Recorder implements RecorderInterface
 
         // Send the request
         $this->client->patchTraces(
-            $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span])
+            [
+                $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span]),
+            ]
         );
     }
 }

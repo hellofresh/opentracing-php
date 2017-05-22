@@ -45,7 +45,7 @@ class ForkingCurlClientTest extends TestCase
         $this->auth->getAccessToken()->willThrow(AccessTokenException::class);
         $this->logger->error(Argument::type('string'), Argument::type('array'));
 
-        $result = $this->client->patchTraces(['traces' => ['trace']]);
+        $result = $this->client->patchTraces([]);
 
         $this->assertFalse($result);
     }
