@@ -68,6 +68,11 @@ class DelayedRecorder implements RecorderInterface
 
     /**
      * Send all traces at once
+     *
+     * You can hook up this function to register_shutdown_function or listen to process events SIGINT, SIGTERM
+     *
+     * @see http://php.net/manual/en/function.register-shutdown-function.php
+     * @see http://php.net/manual/en/function.register-shutdown-function.php#26251
      */
     public function commit()
     {
