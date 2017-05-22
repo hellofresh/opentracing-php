@@ -5,7 +5,7 @@ namespace Tests\HelloFresh\GoogleCloudTracer;
 use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
-use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
+use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
 use HelloFresh\GoogleCloudTracer\Recorder;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -19,7 +19,7 @@ class RecorderTest extends TestCase
     private $recorder;
 
     /**
-     * @var TraceFormatterInterface|ObjectProphecy
+     * @var GoogleCloudFormatter|ObjectProphecy
      */
     private $formatter;
 
@@ -36,7 +36,7 @@ class RecorderTest extends TestCase
     public function setUp()
     {
         $this->client = $this->prophesize(RecorderClientInterface::class);
-        $this->formatter = $this->prophesize(TraceFormatterInterface::class);
+        $this->formatter = $this->prophesize(GoogleCloudFormatter::class);
         $this->recorder = new Recorder(
             $this->client->reveal(),
             $this->projectId,
@@ -66,9 +66,9 @@ class RecorderTest extends TestCase
 
         $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span])
             ->shouldBeCalled()
-            ->willReturn('{"valid": "trace"}');
+            ->willReturn(['traces' => ['trace']]);
 
-        $this->client->patchTraces('{"valid": "trace"}')
+        $this->client->patchTraces(['traces' => ['trace']])
             ->shouldBeCalled()
             ->willReturn('access-token');
 

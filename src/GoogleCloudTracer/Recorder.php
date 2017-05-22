@@ -7,7 +7,6 @@ use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
 use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
-use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 
 /**
@@ -26,19 +25,19 @@ class Recorder implements RecorderInterface
     private $client;
 
     /**
-     * @var TraceFormatterInterface
+     * @var GoogleCloudFormatter
      */
     private $formatter;
 
     /**
      * @param RecorderClientInterface $client
      * @param string $projectId
-     * @param TraceFormatterInterface|null $formatter
+     * @param GoogleCloudFormatter|null $formatter
      */
     public function __construct(
         RecorderClientInterface $client,
         string $projectId,
-        TraceFormatterInterface $formatter = null
+        GoogleCloudFormatter $formatter = null
     ) {
         if ($formatter === null) {
             $formatter = new GoogleCloudFormatter();
@@ -56,7 +55,6 @@ class Recorder implements RecorderInterface
     {
         $context = $span->context();
         if (!$span instanceof Span || !$context instanceof SpanContext) {
-            // TODO?
             return;
         }
 
@@ -65,20 +63,9 @@ class Recorder implements RecorderInterface
             return;
         }
 
-        // Resolve the traceId for google cloud
-        // Related to https://github.com/hellofresh/gcloud-opentracing/blob/master/recorder.go#L98
-        $traceId = $context->getTraceId();
-        if (strlen($traceId) === 36) {
-            $traceId = str_replace('-', '', $traceId);
-        }
-
-        if (strlen($traceId) === 16) {
-            $traceId .= $traceId;
-        }
-
         // Send the request
         $this->client->patchTraces(
-            $this->formatter->formatTrace($this->projectId, $traceId, [$span])
+            $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span])
         );
     }
 }

@@ -7,7 +7,6 @@ use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
 use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
-use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 
 /**
@@ -26,29 +25,24 @@ class DelayedRecorder implements RecorderInterface
     private $client;
 
     /**
-     * @var TraceFormatterInterface
+     * @var GoogleCloudFormatter
      */
     private $formatter;
 
     /**
-     * @var array
+     * @var array Array of spans grouped by TraceId
      */
     private $spans = [];
 
     /**
-     * @var string
-     */
-    private $traceId;
-
-    /**
      * @param RecorderClientInterface $client
      * @param string $projectId
-     * @param TraceFormatterInterface|null $formatter
+     * @param GoogleCloudFormatter|null $formatter
      */
     public function __construct(
         RecorderClientInterface $client,
         string $projectId,
-        TraceFormatterInterface $formatter = null
+        GoogleCloudFormatter $formatter = null
     ) {
         if ($formatter === null) {
             $formatter = new GoogleCloudFormatter();
@@ -69,25 +63,11 @@ class DelayedRecorder implements RecorderInterface
             return;
         }
 
-        // Resolve the traceId for google cloud
-        // Related to https://github.com/hellofresh/gcloud-opentracing/blob/master/recorder.go#L98
-        if ($this->traceId === null) {
-            $traceId = $context->getTraceId();
-            if (strlen($traceId) === 36) {
-                $traceId = str_replace('-', '', $traceId);
-            }
-            if (strlen($traceId) === 16) {
-                $traceId .= $traceId;
-            }
-
-            $this->traceId = $traceId;
-        }
-
-        $this->spans[] = $this->formatter->formatSpan($span);
+        $this->spans[$context->getTraceId()][] = $this->formatter->formatSpan($span);
     }
 
     /**
-     * Send all spans at once
+     * Send all traces at once
      */
     public function commit()
     {
@@ -95,8 +75,20 @@ class DelayedRecorder implements RecorderInterface
             return;
         }
 
+        $traces = [];
+        foreach ($this->spans as $traceId => $spans) {
+            $traces[] = $this->formatter->formatTrace($this->projectId, $traceId, $spans);
+        }
+
         $this->client->patchTraces(
-            $this->formatter->formatTrace($this->projectId, $this->traceId, $this->spans)
+            $traces
         );
+    }
+
+    public function registerOnShutdown()
+    {
+        register_shutdown_function(function () {
+            $this->commit();
+        });
     }
 }

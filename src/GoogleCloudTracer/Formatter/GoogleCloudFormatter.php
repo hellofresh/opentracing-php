@@ -21,6 +21,8 @@ class GoogleCloudFormatter
      */
     public function formatTrace(string $projectId, string $traceId, array $spans)
     {
+        // Resolve the traceId for google cloud
+        // Related to https://github.com/hellofresh/gcloud-opentracing/blob/master/recorder.go#L98
         if (strlen($traceId) === 36) {
             $traceId = str_replace('-', '', $traceId);
         } elseif (strlen($traceId) === 16) {
