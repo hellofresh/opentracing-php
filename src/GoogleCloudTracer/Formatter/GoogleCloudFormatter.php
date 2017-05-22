@@ -8,30 +8,42 @@ use HelloFresh\BasicTracer\Tags;
 use HelloFresh\OpenTracing\SpanInterface;
 use HelloFresh\OpenTracing\SpanKind;
 
-class GoogleCloudFormatter implements TraceFormatterInterface
+class GoogleCloudFormatter
 {
     /**
-     * @inheritdoc
+     * Formats a trace to a Google Traces representation
+     *
+     * @param string $projectId
+     * @param string $traceId
+     * @param SpanInterface[]|array $spans
+     *
+     * @return array
      */
     public function formatTrace(string $projectId, string $traceId, array $spans)
     {
+        if (strlen($traceId) === 36) {
+            $traceId = str_replace('-', '', $traceId);
+        } elseif (strlen($traceId) === 16) {
+            $traceId .= $traceId;
+        }
+
         $spanArrays = array_map(function ($span) {
             return is_array($span) ? $this->assertSpanArray($span) : $this->formatSpan($span);
         }, $spans);
 
-        return json_encode([
-            'traces' => [
-                [
-                    'projectId' => $projectId,
-                    'traceId' => $traceId,
-                    'spans' => $spanArrays,
-                ],
-            ],
-        ]);
+        return [
+            'projectId' => $projectId,
+            'traceId' => $traceId,
+            'spans' => $spanArrays,
+        ];
     }
 
     /**
-     * @inheritdoc
+     * Formats a span to a Google Traces representation
+     *
+     * @param SpanInterface $span
+     *
+     * @return array
      */
     public function formatSpan(SpanInterface $span)
     {
