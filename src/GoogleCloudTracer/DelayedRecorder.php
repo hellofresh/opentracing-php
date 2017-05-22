@@ -84,11 +84,4 @@ class DelayedRecorder implements RecorderInterface
             $traces
         );
     }
-
-    public function registerOnShutdown()
-    {
-        register_shutdown_function(function () {
-            $this->commit();
-        });
-    }
 }
