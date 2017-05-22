@@ -61,14 +61,14 @@ class ForkingCurlClient implements RecorderClientInterface
     }
 
     /**
-     * @param string $traceJson
-     *
      * @return bool
      */
-    public function patchTraces(string $jsonData) : bool
+    public function patchTraces(array $traces) : bool
     {
         try {
-            $process = $this->createRequestProcess($jsonData);
+            $traceJson = json_encode(['traces' => $traces]);
+
+            $process = $this->createRequestProcess($traceJson);
 
             return $process->run() === 0;
         } catch (AccessTokenException $exception) {

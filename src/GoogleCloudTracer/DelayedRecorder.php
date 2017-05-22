@@ -12,7 +12,7 @@ use HelloFresh\OpenTracing\SpanInterface;
 /**
  * @link https://github.com/google/google-api-php-client-services/tree/master/src/Google/Service/CloudTrace
  */
-class Recorder implements RecorderInterface
+class DelayedRecorder implements RecorderInterface
 {
     /**
      * @var string
@@ -28,6 +28,11 @@ class Recorder implements RecorderInterface
      * @var GoogleCloudFormatter
      */
     private $formatter;
+
+    /**
+     * @var array Array of spans grouped by TraceId
+     */
+    private $spans = [];
 
     /**
      * @param RecorderClientInterface $client
@@ -58,16 +63,30 @@ class Recorder implements RecorderInterface
             return;
         }
 
-        // We are not sampling this trace to ignore it
-        if (!$context->isSampled()) {
+        $this->spans[$context->getTraceId()][] = $this->formatter->formatSpan($span);
+    }
+
+    /**
+     * Send all traces at once
+     *
+     * You can hook up this function to register_shutdown_function or listen to process events SIGINT, SIGTERM
+     *
+     * @see http://php.net/manual/en/function.register-shutdown-function.php
+     * @see http://php.net/manual/en/function.register-shutdown-function.php#26251
+     */
+    public function commit()
+    {
+        if (empty($this->spans)) {
             return;
         }
 
-        // Send the request
+        $traces = [];
+        foreach ($this->spans as $traceId => $spans) {
+            $traces[] = $this->formatter->formatTrace($this->projectId, $traceId, $spans);
+        }
+
         $this->client->patchTraces(
-            [
-                $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span]),
-            ]
+            $traces
         );
     }
 }

@@ -34,26 +34,22 @@ class GoogleCloudFormatterTest extends TestCase
         $span->finish();
 
         $expectedData = [
-            'traces' => [
+            'projectId' => $projectId,
+            'traceId' => $traceId . $traceId,
+            'spans' => [
                 [
-                    'projectId' => $projectId,
-                    'traceId' => $traceId,
-                    'spans' => [
-                        [
-                            'spanId' => '1',
-                            'kind' => SpanKind::UNSPECIFIED,
-                            'name' => 'trace-properly-formatted',
-                        ],
-                    ],
+                    'spanId' => '1',
+                    'kind' => SpanKind::UNSPECIFIED,
+                    'name' => 'trace-properly-formatted',
                 ],
             ],
         ];
 
-        $data = json_decode($this->formatter->formatTrace($projectId, $traceId, [$span]), true);
-        $this->assertArrayHasKey('startTime', $data['traces'][0]['spans'][0]);
-        $this->assertArrayHasKey('endTime', $data['traces'][0]['spans'][0]);
-        unset($data['traces'][0]['spans'][0]['startTime']);
-        unset($data['traces'][0]['spans'][0]['endTime']);
+        $data = $this->formatter->formatTrace($projectId, $traceId, [$span]);
+        $this->assertArrayHasKey('startTime', $data['spans'][0]);
+        $this->assertArrayHasKey('endTime', $data['spans'][0]);
+        unset($data['spans'][0]['startTime']);
+        unset($data['spans'][0]['endTime']);
         $this->assertSame($expectedData, $data);
     }
 
@@ -73,18 +69,14 @@ class GoogleCloudFormatterTest extends TestCase
         $projectId = 'project-id';
 
         $expectedData = [
-            'traces' => [
-                [
-                    'projectId' => $projectId,
-                    'traceId' => $traceId,
-                    'spans' => [
-                        $span,
-                    ],
-                ],
+            'projectId' => $projectId,
+            'traceId' => $traceId . $traceId,
+            'spans' => [
+                $span,
             ],
         ];
 
-        $data = json_decode($this->formatter->formatTrace($projectId, $traceId, [$span]), true);
+        $data = $this->formatter->formatTrace($projectId, $traceId, [$span]);
         $this->assertSame($expectedData, $data);
     }
 

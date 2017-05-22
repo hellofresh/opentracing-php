@@ -5,8 +5,9 @@ namespace Tests\HelloFresh\GoogleCloudTracer;
 use HelloFresh\BasicTracer\Span;
 use HelloFresh\BasicTracer\SpanContext;
 use HelloFresh\GoogleCloudTracer\Client\RecorderClientInterface;
-use HelloFresh\GoogleCloudTracer\Formatter\TraceFormatterInterface;
+use HelloFresh\GoogleCloudTracer\Formatter\GoogleCloudFormatter;
 use HelloFresh\GoogleCloudTracer\Recorder;
+use HelloFresh\OpenTracing\SpanKind;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -19,7 +20,7 @@ class RecorderTest extends TestCase
     private $recorder;
 
     /**
-     * @var TraceFormatterInterface|ObjectProphecy
+     * @var GoogleCloudFormatter|ObjectProphecy
      */
     private $formatter;
 
@@ -36,7 +37,7 @@ class RecorderTest extends TestCase
     public function setUp()
     {
         $this->client = $this->prophesize(RecorderClientInterface::class);
-        $this->formatter = $this->prophesize(TraceFormatterInterface::class);
+        $this->formatter = $this->prophesize(GoogleCloudFormatter::class);
         $this->recorder = new Recorder(
             $this->client->reveal(),
             $this->projectId,
@@ -61,14 +62,28 @@ class RecorderTest extends TestCase
      */
     public function spanCanBePublishedIfSampled()
     {
+        $data = [
+            'projectId' => 'project-id',
+            'traceId' => 'abc123def456ab12',
+            'spans' => [
+                [
+                    'spanId' => '123def456ab12abc',
+                    'kind' => SpanKind::UNSPECIFIED,
+                    'name' => 'span-operation-name',
+                ],
+            ],
+        ];
+
         $context = new SpanContext('c1072bb1173c53d4c1072bb1173c53d4', 1, true);
         $span = new Span($this->recorder, microtime(true), 'recorder-test-span', $context);
 
         $this->formatter->formatTrace($this->projectId, $context->getTraceId(), [$span])
             ->shouldBeCalled()
-            ->willReturn('{"valid": "trace"}');
+            ->willReturn(
+                $data
+            );
 
-        $this->client->patchTraces('{"valid": "trace"}')
+        $this->client->patchTraces([$data])
             ->shouldBeCalled()
             ->willReturn('access-token');
 
