@@ -7,9 +7,9 @@ interface RecorderClientInterface
     /**
      * @link https://cloud.google.com/trace/docs/reference/v1/rest/v1/projects/patchTraces
      *
-     * @param string $traceJson JSON payload which is going to be sent to Google Cloud Traces
+     * @param array $traces
      *
      * @return bool
      */
-    public function patchTraces(string $traceJson) : bool;
+    public function patchTraces(array $traces) : bool;
 }
