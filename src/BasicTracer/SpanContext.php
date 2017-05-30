@@ -39,7 +39,7 @@ class SpanContext implements SpanContextInterface
     private $baggage;
 
     /**
-     * @param string $traceId A hex representation of a UUID
+     * @param string $traceId A hex representation of a 64 bit integer
      * @param int $spanId
      * @param bool $sampled
      * @param array $baggage
