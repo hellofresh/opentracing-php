@@ -10,6 +10,7 @@ use HelloFresh\OpenTracing\SpanContextInterface;
 use HelloFresh\OpenTracing\SpanInterface;
 use HelloFresh\OpenTracing\SpanReference;
 use HelloFresh\OpenTracing\TracerInterface;
+use Moontoast\Math\BigNumber;
 use Ramsey\Uuid\Uuid;
 
 class BasicTracer implements TracerInterface
@@ -43,11 +44,10 @@ class BasicTracer implements TracerInterface
     {
         $this->recorder = $recorder;
         $this->shouldSample = $shouldSample ?: function (string $traceId) {
-            /** @var \Moontoast\Math\BigNumber $int */
-            // https://github.com/opentracing/basictracer-go/blob/1b32af207119a14b1b231d451df3ed04a72efebf/tracer.go#L100
-            $int = Uuid::fromString($traceId)->getInteger();
+            $number = BigNumber::convertToBase10($traceId, 16);
+            $number = new BigNumber($number);
 
-            return $int->mod(64)->isEqualTo(0);
+            return $number->mod(64)->isEqualTo(0);
         };
     }
 
@@ -93,7 +93,7 @@ class BasicTracer implements TracerInterface
             }
         }
         if ($context === null) {
-            $traceId = Uuid::uuid4()->getHex();
+            $traceId = Uuid::uuid4()->getMostSignificantBitsHex();
             $context = new SpanContext(
                 $traceId,
                 $spanId,
