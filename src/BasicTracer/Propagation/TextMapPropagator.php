@@ -86,7 +86,7 @@ class TextMapPropagator implements ExtractorInterface, InjectorInterface
 
         $carrier[self::FIELD_TRACE_ID] = $spanContext->getTraceId();
         $carrier[self::FIELD_SPAN_ID] = $spanContext->getSpanId();
-        $carrier[self::FIELD_SAMPLED] = $spanContext->isSampled();
+        $carrier[self::FIELD_SAMPLED] = $spanContext->isSampled() ? "true" : "false";
 
         foreach ($spanContext->getBaggageItems() as $key => $value) {
             $carrier[self::PREFIX_BAGGAGE . $key] = $value;
