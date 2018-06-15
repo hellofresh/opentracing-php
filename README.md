@@ -1,3 +1,5 @@
+**DEPRECATED** This repo is deprecated and will soon be archived in favor of the official [OpenTracing library for PHP](https://github.com/opentracing/opentracing-php) 
+
 # OpenTracing API for PHP
 
 This package is a PHP platform API for OpenTracing.
