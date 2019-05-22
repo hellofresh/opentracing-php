@@ -11,7 +11,7 @@ use HelloFresh\OpenTracing\SpanInterface;
 use HelloFresh\OpenTracing\SpanReference;
 use HelloFresh\OpenTracing\TracerInterface;
 use Moontoast\Math\BigNumber;
-use Ramsey\Uuid\Uuid;
+use function random_bytes;
 
 class BasicTracer implements TracerInterface
 {
@@ -93,7 +93,7 @@ class BasicTracer implements TracerInterface
             }
         }
         if ($context === null) {
-            $traceId = Uuid::uuid4()->getMostSignificantBitsHex();
+            $traceId = $this->generateTraceId();
             $context = new SpanContext(
                 $traceId,
                 $spanId,
@@ -155,5 +155,10 @@ class BasicTracer implements TracerInterface
         $this->extractors[$format] = $extractor;
 
         return $this;
+    }
+
+    private function generateTraceId() : string
+    {
+        return bin2hex(random_bytes(8));
     }
 }

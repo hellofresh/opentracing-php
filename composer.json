@@ -3,9 +3,9 @@
     "description": "OpenTracing API for PHP",
     "type": "library",
     "require": {
+        "php": ">=7.0",
         "lcobucci/jwt": "^3.2",
         "doctrine/cache": "^1.6",
-        "ramsey/uuid": "^3.6",
         "moontoast/math": "^1.1"
     },
     "require-dev": {
